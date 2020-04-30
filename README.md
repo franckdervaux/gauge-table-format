@@ -1,16 +1,12 @@
 # nicegaugetables README
 
-This is the README for your extension "nicegaugetables". After writing up a brief description, we recommend including the following sections.
+This extension is helping to properly format Gauge tables.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Command: "Format Gauge Table"
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Format the lines included in the selection as a table.
 
 ## Requirements
 

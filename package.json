@@ -3,6 +3,7 @@
 	"displayName": "NiceGaugeTables",
 	"description": "Properly format tables in Gauge spec files",
 	"version": "0.0.1",
+	"publisher": "franckdervaux",
 	"engines": {
 		"vscode": "^1.44.0"
 	},
