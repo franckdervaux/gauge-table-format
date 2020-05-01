@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 
 const PIPE = '|'
 const SPACE = ' '
+const TABLELINE = new RegExp(/^(\|.*?)+\|(\ )*$/gm)
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,29 +21,42 @@ export function activate(context: vscode.ExtensionContext) {
 			let document = editor.document
 			let selection = editor.selection
 
-			let selectedlines = new vscode.Range(selection.start.line, 0, selection.end.line + 1, 0)
+			// does nothing if the current line is not a table line
+			if (!document.lineAt(selection.start.line).text.match(TABLELINE)) return
 
-			// split the selection into lines
-			let lines: Array<String> = document.getText(selectedlines).split('\n')
+			// look for lines that make up the table
+			// starting from the cursor position
+			// and going up
+			let firstline = selection.start.line
+			let lastline = selection.start.line
+			while (document.lineAt(firstline).text.match(TABLELINE)) {
+				firstline--
+			}
+			while (document.lineAt(lastline).text.match(TABLELINE)) {
+				lastline++
+			}
+			let lines: Array<String> = []
+			for (let i = firstline + 1; i < lastline; i++) {
+				lines.push(document.lineAt(i).text)
+			}
+			let tablerange = new vscode.Range(new vscode.Position(firstline + 1, 0), new vscode.Position(lastline, 0))
 			let counts: Array<number> = []
 			// First calculate the maximum size of each column
 			for (let line of lines) {
-				if ((line.match(/\|/g) || []).length > 1) { // ignore lines that don't have at least two | characters
-					// Add leading | if necessary
-					if (line[0] !== PIPE) line = PIPE + line
-					// Add trailing | if necessary, starting by trimming trailing spaces
-					line = line.trim()
-					if (line[line.length - 1] != PIPE) line = line + PIPE
-					let segments = line.split(PIPE)
-					segments.shift() // As the first character is a |, the first segment is always empty TODO verify first character
-					segments.pop() // As the last character is a |, the first segment is always empty TODO verify last character
-					if (segments) {
-						for (let i = 0; i < segments.length; i++) {
-							if (i < counts.length) {
-								counts[i] = Math.max(counts[i], segments[i].trim().length)
-							} else {
-								counts.push(segments[i].trim().length)
-							}
+				// Add leading | if necessary
+				if (line[0] !== PIPE) line = PIPE + line
+				// Add trailing | if necessary, starting by trimming trailing spaces
+				line = line.trim()
+				if (line[line.length - 1] != PIPE) line = line + PIPE
+				let segments = line.split(PIPE)
+				segments.shift() // As the first character is a |, the first segment is always empty TODO verify first character
+				segments.pop() // As the last character is a |, the first segment is always empty TODO verify last character
+				if (segments) {
+					for (let i = 0; i < segments.length; i++) {
+						if (i < counts.length) {
+							counts[i] = Math.max(counts[i], segments[i].trim().length)
+						} else {
+							counts.push(segments[i].trim().length)
 						}
 					}
 				}
@@ -79,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 				result = result + line + '\n'
 			}
 			editor.edit(editBuilder => {
-				editBuilder.replace(selectedlines, result.slice(0, -1)) // removing the unnecessray trailing newline
+				editBuilder.replace(tablerange, result)
 			})
 		}
 	})

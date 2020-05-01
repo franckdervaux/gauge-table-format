@@ -8,6 +8,7 @@ A table is defined by columns separated by the | character. It can have separato
 Command: "Format Gauge Table"
 
 Format the lines included in the selection as a table.
+![Demo](./formattable.gif?raw=true)
 
 ## Future Features
 
