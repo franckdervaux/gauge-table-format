@@ -163,6 +163,43 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 	context.subscriptions.push(deletetable)
 
+	let deletecolumn = vscode.commands.registerCommand('nicegaugetables.deleteColumn', () => {
+		let editor = vscode.window.activeTextEditor
+
+		if (editor) {
+			let document = editor.document
+			let selection = editor.selection
+
+			let { firstline, lastline } = detectTable(document, selection.start)
+			if (firstline < 0) return // no table found
+
+			let lines: Array<String> = []
+			for (let i = firstline; i <= lastline; i++) {
+				lines.push(document.lineAt(i).text)
+			}
+			let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
+
+			// calculate column of the cursor
+			let columnindex = document.lineAt(selection.start.line).text.substring(0, selection.start.character).match(/\|/g)?.length
+			if (columnindex === undefined) return
+			columnindex -- 
+
+			// remove the column in each line
+			let result = ''
+			for (let line of lines) {
+				let segments = line.split(PIPE)
+				segments.shift()
+				result += PIPE + segments.filter((seg, segindex) => segindex != columnindex).join(PIPE) + '\n'
+			}
+			// remove trailing /n
+			result = result.substr(0, result.length - 1)
+			editor.edit(editBuilder => {
+				editBuilder.replace(tablerange, result)
+			})
+		}
+	})
+	context.subscriptions.push(deletecolumn)
+
 }
 
 // this method is called when your extension is deactivated

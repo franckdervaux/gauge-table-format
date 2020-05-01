@@ -23,10 +23,15 @@ Deletes the table surrounding the cursor position.
 
 ![Demo](deletetable.gif)
 
+Command: `Delete Gauge Column`
+
+Deletes the column containing the cursor. 
+
+![Demo](deletecolumn.gif)
+
 ## Future Features
 
 * Delete columns
-* Delete a full table
 * Adding columns and rows to an existing table
 * Interactive WebView panel to manage tables
 

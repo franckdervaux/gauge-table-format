@@ -33,6 +33,10 @@
 			{
 				"command": "nicegaugetables.deleteTable",
 				"title": "Delete Gauge Table"
+			},
+			{
+				"command": "nicegaugetables.deleteColumn",
+				"title": "Delete Gauge Column"
 			}
 		]
 	},
