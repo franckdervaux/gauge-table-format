@@ -1,6 +1,7 @@
 # nicegaugetables README
 
-This extension is helping to properly format Gauge tables.
+This extension is helping to create and maintain tables.
+A table is defined by columns separated by the | character. It can have separator lines where the content of each column is a series of - characters.
 
 ## Features
 
@@ -8,9 +9,15 @@ Command: "Format Gauge Table"
 
 Format the lines included in the selection as a table.
 
-## Requirements
+## Future Features
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+* Automatically detect a table around the cursor instead of relying on selection
+* Complete partial rows
+* Create a table by entering a number of columns and rows
+* Delete columns
+* Delete a full table
+* Adding columns and rows to an existing table
+* Interactive WebView panel to manage tables
 
 ## Extension Settings
 
@@ -42,20 +49,3 @@ Fixed issue #.
 ### 1.1.0
 
 Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**

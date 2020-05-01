@@ -4,6 +4,9 @@
 	"description": "Properly format tables in Gauge spec files",
 	"version": "0.0.1",
 	"publisher": "franckdervaux",
+	"repository": {
+		"url": "https://github.com/franckdervaux/gauge-table-format.git"
+	},
 	"engines": {
 		"vscode": "^1.44.0"
 	},
