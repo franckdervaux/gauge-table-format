@@ -1,6 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from 'vscode'
 
 const PIPE = '|'
 const SPACE = ' '
@@ -12,18 +12,18 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('nicegaugetables.formatTable', () => {
+	let formattable = vscode.commands.registerCommand('nicegaugetables.formatTable', () => {
 		// Get the active text editor
-		let editor = vscode.window.activeTextEditor;
+		let editor = vscode.window.activeTextEditor
 
 		if (editor) {
-			let document = editor.document;
-			let selection = editor.selection;
+			let document = editor.document
+			let selection = editor.selection
 
 			let selectedlines = new vscode.Range(selection.start.line, 0, selection.end.line + 1, 0)
 
 			// split the selection into lines
-			let lines: Array<String> = document.getText(selectedlines).split('\n');
+			let lines: Array<String> = document.getText(selectedlines).split('\n')
 			let counts: Array<number> = []
 			// First calculate the maximum size of each column
 			for (let line of lines) {
@@ -31,8 +31,8 @@ export function activate(context: vscode.ExtensionContext) {
 					// Add leading | if necessary
 					if (line[0] !== PIPE) line = PIPE + line
 					// Add trailing | if necessary, starting by trimming trailing spaces
-					line = line.trim() 
-					if (line[line.length-1] != PIPE) line = line + PIPE
+					line = line.trim()
+					if (line[line.length - 1] != PIPE) line = line + PIPE
 					let segments = line.split(PIPE)
 					segments.shift() // As the first character is a |, the first segment is always empty TODO verify first character
 					segments.pop() // As the last character is a |, the first segment is always empty TODO verify last character
@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
 							if (i < counts.length) {
 								counts[i] = Math.max(counts[i], segments[i].trim().length)
 							} else {
-								counts.push(segments[i].length)
+								counts.push(segments[i].trim().length)
 							}
 						}
 					}
@@ -54,8 +54,8 @@ export function activate(context: vscode.ExtensionContext) {
 					// Add leading | if necessary
 					if (line[0] !== PIPE) line = PIPE + line
 					// Add trailing | if necessary, starting by trimming trailing spaces
-					line = line.trim() 
-					if (line[line.length-1] != PIPE) line = line + PIPE
+					line = line.trim()
+					if (line[line.length - 1] != PIPE) line = line + PIPE
 					let segments = line.split(PIPE)
 					segments.shift()
 					segments.pop()
@@ -70,21 +70,58 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 					if (segments.length < counts.length) {
 						// complete incomplete lines
-						for (let j = segments.length; j < counts.length; j ++) {
+						for (let j = segments.length; j < counts.length; j++) {
 							segments.push(linepadding.repeat(counts[j] + 2)) // +2 to account for added spaces
 						}
 					}
 					line = PIPE + segments.join(PIPE) + PIPE
 				}
-				result = result + line  + '\n'
+				result = result + line + '\n'
 			}
 			editor.edit(editBuilder => {
-				editBuilder.replace(selectedlines, result);
-			});
+				editBuilder.replace(selectedlines, result.slice(0, -1)) // removing the unnecessray trailing newline
+			})
 		}
-	});
+	})
+	context.subscriptions.push(formattable)
 
-	context.subscriptions.push(disposable);
+	let createtable = vscode.commands.registerCommand('nicegaugetables.createTable', () => {
+		let editor = vscode.window.activeTextEditor
+
+		if (editor) {
+			let document = editor.document
+			let selection = editor.selection
+
+			vscode.window.showInputBox({ prompt: 'Number of columns' }).then(inputcols => {
+				// check that value entered is a number
+				let nbcols = parseInt(inputcols || '', 10)
+				if (!isNaN(nbcols)) {
+					vscode.window.showInputBox({ prompt: 'Number of lines' }).then(inputlines => {
+						// check that value entered is a number
+						let nblines = parseInt(inputlines || '', 10)
+						if (!isNaN(nblines)) {
+							let result = ''
+							// First create header line
+							result = '|     '.repeat(nbcols) + PIPE + '\n'
+							// Then add separator line
+							result += '|-----'.repeat(nbcols) + PIPE + '\n'
+							// Then add lines
+							result += ('|     '.repeat(nbcols) + PIPE + '\n').repeat(nblines)
+							result += '\n'
+							if (editor) {
+								editor.edit(editBuilder => {
+									editBuilder.insert(new vscode.Position(selection.start.line + 1, 0), result)
+								})
+								editor.selection = new vscode.Selection(new vscode.Position(selection.start.line, 2), new vscode.Position(selection.start.line, 2))
+							}
+						}
+					})
+				}
+			})
+		}
+	})
+	context.subscriptions.push(createtable)
+
 }
 
 // this method is called when your extension is deactivated

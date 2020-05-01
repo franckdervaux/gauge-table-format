@@ -14,7 +14,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:nicegaugetables.formatTable"
+		"onCommand:nicegaugetables.formatTable",
+		"onCommand:nicegaugetables.createTable"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -22,6 +23,10 @@
 			{
 				"command": "nicegaugetables.formatTable",
 				"title": "Format Gauge Table"
+			},
+			{
+				"command": "nicegaugetables.createTable",
+				"title": "Create Gauge Table"
 			}
 		]
 	},
