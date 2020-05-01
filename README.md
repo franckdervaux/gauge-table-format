@@ -5,16 +5,20 @@ A table is defined by columns separated by the | character. It can have separato
 
 ## Features
 
-Command: "Format Gauge Table"
+Command: `Format Gauge Table`
 
-Format the lines included in the selection as a table.
-![Demo](./formattable.gif?raw=true)
+Properly format the table surrounding the cursor position. It makes all columns of the same width on all lines and add missing columns.
+
+![Demo](formattable.gif)
+
+Command: `Create Gauge Table`
+
+Creates a table by asking for the number of rows and columns. It automatically creates a header row followed by a separator row.
+
+![Demo](createtable.gif)
 
 ## Future Features
 
-* Automatically detect a table around the cursor instead of relying on selection
-* Complete partial rows
-* Create a table by entering a number of columns and rows
 * Delete columns
 * Delete a full table
 * Adding columns and rows to an existing table

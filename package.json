@@ -1,9 +1,10 @@
 {
 	"name": "nicegaugetables",
 	"displayName": "NiceGaugeTables",
-	"description": "Properly format tables in Gauge spec files",
+	"description": "Helps creating and formatting tables in Gauge spec files",
 	"version": "0.0.1",
 	"publisher": "franckdervaux",
+	"icon": "icon.png",
 	"repository": {
 		"url": "https://github.com/franckdervaux/gauge-table-format.git"
 	},
