@@ -6,6 +6,25 @@ const PIPE = '|'
 const SPACE = ' '
 const TABLELINE = new RegExp(/^(\|.*?)+\|(\ )*$/gm)
 
+const detectTable = (document: vscode.TextDocument, from: vscode.Position): { firstline: number, lastline: number } => {
+	// does nothing if the current line is not a table line
+	if (!document.lineAt(from.line).text.match(TABLELINE)) return {firstline: -1, lastline: -1}
+
+	// look for lines that make up the table
+	// starting from the cursor position
+	// and going up
+	let firstline = from.line
+	let lastline = from.line
+	while ((firstline >= 0) && document.lineAt(firstline).text.match(TABLELINE)) {
+		firstline--
+	}
+	while ((lastline < document.lineCount) && document.lineAt(lastline).text.match(TABLELINE)) {
+		lastline++
+	}
+
+	return { firstline: firstline + 1, lastline: lastline - 1}
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -21,25 +40,15 @@ export function activate(context: vscode.ExtensionContext) {
 			let document = editor.document
 			let selection = editor.selection
 
-			// does nothing if the current line is not a table line
-			if (!document.lineAt(selection.start.line).text.match(TABLELINE)) return
-
 			// look for lines that make up the table
-			// starting from the cursor position
-			// and going up
-			let firstline = selection.start.line
-			let lastline = selection.start.line
-			while (document.lineAt(firstline).text.match(TABLELINE)) {
-				firstline--
-			}
-			while (document.lineAt(lastline).text.match(TABLELINE)) {
-				lastline++
-			}
+			let { firstline, lastline } = detectTable(document, selection.start)
+			if (firstline < 0) return // notable found
+
 			let lines: Array<String> = []
-			for (let i = firstline + 1; i < lastline; i++) {
+			for (let i = firstline; i <= lastline; i++) {
 				lines.push(document.lineAt(i).text)
 			}
-			let tablerange = new vscode.Range(new vscode.Position(firstline + 1, 0), new vscode.Position(lastline, 0))
+			let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
 			let counts: Array<number> = []
 			// First calculate the maximum size of each column
 			for (let line of lines) {
@@ -135,6 +144,24 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	})
 	context.subscriptions.push(createtable)
+
+	let deletetable = vscode.commands.registerCommand('nicegaugetables.deleteTable', () => {
+		let editor = vscode.window.activeTextEditor
+
+		if (editor) {
+			let document = editor.document
+			let selection = editor.selection
+
+			let { firstline, lastline } = detectTable(document, selection.start)
+			if (firstline < 0) return // no table found
+
+			editor.edit(editBuilder => {
+				editBuilder.replace(new vscode.Range(firstline, 0, lastline, document.lineAt(lastline).range.end.character), '')
+			})
+
+		}
+	})
+	context.subscriptions.push(deletetable)
 
 }
 

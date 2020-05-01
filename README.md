@@ -17,6 +17,12 @@ Creates a table by asking for the number of rows and columns. It automatically c
 
 ![Demo](createtable.gif)
 
+Command: `Delete Gauge Table`
+
+Deletes the table surrounding the cursor position. 
+
+![Demo](deletetable.gif)
+
 ## Future Features
 
 * Delete columns

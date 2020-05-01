@@ -16,7 +16,8 @@
 	],
 	"activationEvents": [
 		"onCommand:nicegaugetables.formatTable",
-		"onCommand:nicegaugetables.createTable"
+		"onCommand:nicegaugetables.createTable",
+		"onCommand:nicegaugetables.deleteTable"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -28,6 +29,10 @@
 			{
 				"command": "nicegaugetables.createTable",
 				"title": "Create Gauge Table"
+			},
+			{
+				"command": "nicegaugetables.deleteTable",
+				"title": "Delete Gauge Table"
 			}
 		]
 	},
