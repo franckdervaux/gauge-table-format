@@ -8,7 +8,7 @@ const TABLELINE = new RegExp(/^(\|.*?)+\|(\ )*$/gm)
 
 const detectTable = (document: vscode.TextDocument, from: vscode.Position): { firstline: number, lastline: number } => {
 	// does nothing if the current line is not a table line
-	if (!document.lineAt(from.line).text.match(TABLELINE)) return {firstline: -1, lastline: -1}
+	if (!document.lineAt(from.line).text.match(TABLELINE)) return { firstline: -1, lastline: -1 }
 
 	// look for lines that make up the table
 	// starting from the cursor position
@@ -22,7 +22,103 @@ const detectTable = (document: vscode.TextDocument, from: vscode.Position): { fi
 		lastline++
 	}
 
-	return { firstline: firstline + 1, lastline: lastline - 1}
+	return { firstline: firstline + 1, lastline: lastline - 1 }
+}
+
+const getWebviewContent = (): string => {
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Tables</title>
+</head>
+<body>
+<button type="button" onClick="formattable()">Format Table</button>
+<script>
+	const vscode = acquireVsCodeApi();
+	function formattable() {
+		vscode.postMessage({
+			command: 'formattable'
+		})
+	}
+</script>
+</body>
+</html>`
+}
+
+let latestEditor: vscode.TextEditor | undefined = vscode.window.activeTextEditor
+
+const formatTable = (editor: vscode.TextEditor | undefined) => {
+	if (editor) {
+		let document = editor.document
+		let selection = editor.selection
+
+		// look for lines that make up the table
+		let { firstline, lastline } = detectTable(document, selection.start)
+		if (firstline < 0) return // notable found
+
+		let lines: Array<String> = []
+		for (let i = firstline; i <= lastline; i++) {
+			lines.push(document.lineAt(i).text)
+		}
+		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
+		let counts: Array<number> = []
+		// First calculate the maximum size of each column
+		for (let line of lines) {
+			// Add leading | if necessary
+			if (line[0] !== PIPE) line = PIPE + line
+			// Add trailing | if necessary, starting by trimming trailing spaces
+			line = line.trim()
+			if (line[line.length - 1] != PIPE) line = line + PIPE
+			let segments = line.split(PIPE)
+			segments.shift() // As the first character is a |, the first segment is always empty TODO verify first character
+			segments.pop() // As the last character is a |, the first segment is always empty TODO verify last character
+			if (segments) {
+				for (let i = 0; i < segments.length; i++) {
+					if (i < counts.length) {
+						counts[i] = Math.max(counts[i], segments[i].trim().length)
+					} else {
+						counts.push(segments[i].trim().length)
+					}
+				}
+			}
+		}
+		// Then, padd each column of each line to the maximum size
+		let result = ''
+		for (let line of lines) {
+			if ((line.match(/\|/g) || []).length > 1) { // ignore lines that don't have at least two | characters
+				// Add leading | if necessary
+				if (line[0] !== PIPE) line = PIPE + line
+				// Add trailing | if necessary, starting by trimming trailing spaces
+				line = line.trim()
+				if (line[line.length - 1] != PIPE) line = line + PIPE
+				let segments = line.split(PIPE)
+				segments.shift()
+				segments.pop()
+				let linepadding = SPACE
+				if (segments.every(seg => seg === segments[0][0].repeat(seg.length))) linepadding = segments[0][0]
+				for (let i = 0; i < segments.length; i++) {
+					let padding = SPACE
+					if (segments[i] === segments[i][0].repeat(segments[i].length)) {
+						padding = segments[i][0]
+					}
+					segments[i] = padding + segments[i].trim() + padding.repeat(counts[i] - segments[i].trim().length) + padding
+				}
+				if (segments.length < counts.length) {
+					// complete incomplete lines
+					for (let j = segments.length; j < counts.length; j++) {
+						segments.push(linepadding.repeat(counts[j] + 2)) // +2 to account for added spaces
+					}
+				}
+				line = PIPE + segments.join(PIPE) + PIPE
+			}
+			result = result + line + '\n'
+		}
+		editor.edit(editBuilder => {
+			editBuilder.replace(tablerange, result)
+		})
+	}
 }
 
 // this method is called when your extension is activated
@@ -32,83 +128,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let formattable = vscode.commands.registerCommand('nicegaugetables.formatTable', () => {
-		// Get the active text editor
-		let editor = vscode.window.activeTextEditor
-
-		if (editor) {
-			let document = editor.document
-			let selection = editor.selection
-
-			// look for lines that make up the table
-			let { firstline, lastline } = detectTable(document, selection.start)
-			if (firstline < 0) return // notable found
-
-			let lines: Array<String> = []
-			for (let i = firstline; i <= lastline; i++) {
-				lines.push(document.lineAt(i).text)
-			}
-			let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
-			let counts: Array<number> = []
-			// First calculate the maximum size of each column
-			for (let line of lines) {
-				// Add leading | if necessary
-				if (line[0] !== PIPE) line = PIPE + line
-				// Add trailing | if necessary, starting by trimming trailing spaces
-				line = line.trim()
-				if (line[line.length - 1] != PIPE) line = line + PIPE
-				let segments = line.split(PIPE)
-				segments.shift() // As the first character is a |, the first segment is always empty TODO verify first character
-				segments.pop() // As the last character is a |, the first segment is always empty TODO verify last character
-				if (segments) {
-					for (let i = 0; i < segments.length; i++) {
-						if (i < counts.length) {
-							counts[i] = Math.max(counts[i], segments[i].trim().length)
-						} else {
-							counts.push(segments[i].trim().length)
-						}
-					}
-				}
-			}
-			// Then, padd each column of each line to the maximum size
-			let result = ''
-			for (let line of lines) {
-				if ((line.match(/\|/g) || []).length > 1) { // ignore lines that don't have at least two | characters
-					// Add leading | if necessary
-					if (line[0] !== PIPE) line = PIPE + line
-					// Add trailing | if necessary, starting by trimming trailing spaces
-					line = line.trim()
-					if (line[line.length - 1] != PIPE) line = line + PIPE
-					let segments = line.split(PIPE)
-					segments.shift()
-					segments.pop()
-					let linepadding = SPACE
-					if (segments.every(seg => seg === segments[0][0].repeat(seg.length))) linepadding = segments[0][0]
-					for (let i = 0; i < segments.length; i++) {
-						let padding = SPACE
-						if (segments[i] === segments[i][0].repeat(segments[i].length)) {
-							padding = segments[i][0]
-						}
-						segments[i] = padding + segments[i].trim() + padding.repeat(counts[i] - segments[i].trim().length) + padding
-					}
-					if (segments.length < counts.length) {
-						// complete incomplete lines
-						for (let j = segments.length; j < counts.length; j++) {
-							segments.push(linepadding.repeat(counts[j] + 2)) // +2 to account for added spaces
-						}
-					}
-					line = PIPE + segments.join(PIPE) + PIPE
-				}
-				result = result + line + '\n'
-			}
-			editor.edit(editBuilder => {
-				editBuilder.replace(tablerange, result)
-			})
-		}
+	let formattablecommand = vscode.commands.registerCommand('nicegaugetables.formatTable', () => {
+		formatTable(vscode.window.activeTextEditor)
 	})
-	context.subscriptions.push(formattable)
+	context.subscriptions.push(formattablecommand)
 
-	let createtable = vscode.commands.registerCommand('nicegaugetables.createTable', () => {
+	let createtablecommand = vscode.commands.registerCommand('nicegaugetables.createTable', () => {
 		let editor = vscode.window.activeTextEditor
 
 		if (editor) {
@@ -143,9 +168,9 @@ export function activate(context: vscode.ExtensionContext) {
 			})
 		}
 	})
-	context.subscriptions.push(createtable)
+	context.subscriptions.push(createtablecommand)
 
-	let deletetable = vscode.commands.registerCommand('nicegaugetables.deleteTable', () => {
+	let deletetablecommand = vscode.commands.registerCommand('nicegaugetables.deleteTable', () => {
 		let editor = vscode.window.activeTextEditor
 
 		if (editor) {
@@ -161,9 +186,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 		}
 	})
-	context.subscriptions.push(deletetable)
+	context.subscriptions.push(deletetablecommand)
 
-	let deletecolumn = vscode.commands.registerCommand('nicegaugetables.deleteColumn', () => {
+	let deletecolumncommand = vscode.commands.registerCommand('nicegaugetables.deleteColumn', () => {
 		let editor = vscode.window.activeTextEditor
 
 		if (editor) {
@@ -182,7 +207,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// calculate column of the cursor
 			let columnindex = document.lineAt(selection.start.line).text.substring(0, selection.start.character).match(/\|/g)?.length
 			if (columnindex === undefined) return
-			columnindex -- 
+			columnindex--
 
 			// remove the column in each line
 			let result = ''
@@ -198,8 +223,40 @@ export function activate(context: vscode.ExtensionContext) {
 			})
 		}
 	})
-	context.subscriptions.push(deletecolumn)
+	context.subscriptions.push(deletecolumncommand)
 
+	let viewpanelcommand = vscode.commands.registerCommand('nicegaugetables.viewPanel', () => {
+		// Create and show a new webview
+		const panel = vscode.window.createWebviewPanel(
+			'tablePanel', // Identifies the type of the webview. Used internally
+			'Manage Tables', // Title of the panel displayed to the user
+			vscode.ViewColumn.Beside, // Editor column to show the new webview panel in.
+			{ enableScripts: true }
+		)
+
+		panel.webview.html = getWebviewContent()
+
+		panel.webview.onDidReceiveMessage(
+			message => {
+				switch (message.command) {
+					case 'formattable':
+						formatTable(latestEditor)
+						return;
+				}
+			},
+			undefined,
+			context.subscriptions
+		);
+
+
+	})
+	context.subscriptions.push(viewpanelcommand)
+
+	latestEditor = vscode.window.activeTextEditor
+
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		if (editor) latestEditor = editor 
+	})
 }
 
 // this method is called when your extension is deactivated

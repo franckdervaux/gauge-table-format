@@ -1,9 +1,9 @@
 {
 	"name": "nicegaugetables",
-	"displayName": "NiceGaugeTables",
+	"displayName": "Nice Gauge Tables",
 	"description": "Helps creating and formatting tables in Gauge spec files",
 	"version": "0.0.1",
-	"publisher": "franckdervaux",
+	"publisher": "Franck Dervaux",
 	"icon": "icon.png",
 	"repository": {
 		"url": "https://github.com/franckdervaux/gauge-table-format.git"
@@ -17,26 +17,36 @@
 	"activationEvents": [
 		"onCommand:nicegaugetables.formatTable",
 		"onCommand:nicegaugetables.createTable",
-		"onCommand:nicegaugetables.deleteTable"
+		"onCommand:nicegaugetables.deleteTable",
+		"onCommand:nicegaugetables.viewPanel"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "nicegaugetables.formatTable",
-				"title": "Format Gauge Table"
+				"title": "Format Gauge Table",
+				"category": "Gauge Tables"
 			},
 			{
 				"command": "nicegaugetables.createTable",
-				"title": "Create Gauge Table"
+				"title": "Create Gauge Table",
+				"category": "Gauge Tables"
 			},
 			{
 				"command": "nicegaugetables.deleteTable",
-				"title": "Delete Gauge Table"
+				"title": "Delete Gauge Table",
+				"category": "Gauge Tables"
 			},
 			{
 				"command": "nicegaugetables.deleteColumn",
-				"title": "Delete Gauge Column"
+				"title": "Delete Gauge Column",
+				"category": "Gauge Tables"
+			},
+			{
+				"command": "nicegaugetables.viewPanel",
+				"title": "View Table Panel",
+				"category": "Gauge Tables"
 			}
 		]
 	},
