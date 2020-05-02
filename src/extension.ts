@@ -25,6 +25,27 @@ const detectTable = (document: vscode.TextDocument, from: vscode.Position): { fi
 	return { firstline: firstline + 1, lastline: lastline - 1 }
 }
 
+const createTable = (nbcols: number, nblines: number, editor: vscode.TextEditor | undefined) => {
+	if (editor) {
+		let selection = editor.selection
+
+		let result = ''
+		// First create header line
+		result = '|     '.repeat(nbcols) + PIPE + '\n'
+		// Then add separator line
+		result += '|-----'.repeat(nbcols) + PIPE + '\n'
+		// Then add lines
+		result += ('|     '.repeat(nbcols) + PIPE + '\n').repeat(nblines)
+		result += '\n'
+		if (editor) {
+			editor.edit(editBuilder => {
+				editBuilder.insert(new vscode.Position(selection.start.line + 1, 0), result)
+			})
+			editor.selection = new vscode.Selection(new vscode.Position(selection.start.line, 2), new vscode.Position(selection.start.line, 2))
+		}
+	}
+}
+
 const getWebviewContent = (): string => {
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -34,13 +55,14 @@ const getWebviewContent = (): string => {
     <title>Manage Tables</title>
 </head>
 <body>
-<button type="button" onClick="formattable()">Format Table</button>
+<div><button type="button" onClick="sendmsg({ command: 'formattable'})">Format Table</button></div>
+<div><label for="nbcols">Nb Columns:</label><input type="number" id="nbcols"  min="1" max="20"/>
+<label for="nbrows">Nb Rows:</label><input type="number" id="nbrows" min="1" max="100"/>
+<button type="button" onClick="sendmsg({ command: 'createtable', nbrows: document.getElementById('nbrows').value, nbcols: document.getElementById('nbcols').value })">Create Table</button></div>
 <script>
 	const vscode = acquireVsCodeApi();
-	function formattable() {
-		vscode.postMessage({
-			command: 'formattable'
-		})
+	function sendmsg(command) {
+		vscode.postMessage(command)
 	}
 </script>
 </body>
@@ -148,20 +170,7 @@ export function activate(context: vscode.ExtensionContext) {
 						// check that value entered is a number
 						let nblines = parseInt(inputlines || '', 10)
 						if (!isNaN(nblines)) {
-							let result = ''
-							// First create header line
-							result = '|     '.repeat(nbcols) + PIPE + '\n'
-							// Then add separator line
-							result += '|-----'.repeat(nbcols) + PIPE + '\n'
-							// Then add lines
-							result += ('|     '.repeat(nbcols) + PIPE + '\n').repeat(nblines)
-							result += '\n'
-							if (editor) {
-								editor.edit(editBuilder => {
-									editBuilder.insert(new vscode.Position(selection.start.line + 1, 0), result)
-								})
-								editor.selection = new vscode.Selection(new vscode.Position(selection.start.line, 2), new vscode.Position(selection.start.line, 2))
-							}
+							createTable(nbcols, nblines, editor)
 						}
 					})
 				}
@@ -241,7 +250,10 @@ export function activate(context: vscode.ExtensionContext) {
 				switch (message.command) {
 					case 'formattable':
 						formatTable(latestEditor)
-						return;
+						return
+					case 'createtable':
+						createTable(message.nbcols, message.nbrows, latestEditor)
+						return
 				}
 			},
 			undefined,
@@ -255,9 +267,10 @@ export function activate(context: vscode.ExtensionContext) {
 	latestEditor = vscode.window.activeTextEditor
 
 	vscode.window.onDidChangeActiveTextEditor(editor => {
-		if (editor) latestEditor = editor 
+		if (editor) latestEditor = editor
 	})
 }
+
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
