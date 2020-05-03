@@ -1,6 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
+import * as fs from 'fs'
+import * as path from 'path'
 
 const PIPE = '|'
 const SPACE = ' '
@@ -46,28 +48,13 @@ const createTable = (nbcols: number, nblines: number, editor: vscode.TextEditor 
 	}
 }
 
-const getWebviewContent = (): string => {
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Tables</title>
-</head>
-<body>
-<div><button type="button" onClick="sendmsg({ command: 'formattable'})">Format Table</button></div>
-<div><label for="nbcols">Nb Columns:</label><input type="number" id="nbcols"  min="1" max="20"/>
-<label for="nbrows">Nb Rows:</label><input type="number" id="nbrows" min="1" max="100"/>
-<button type="button" onClick="sendmsg({ command: 'createtable', nbrows: document.getElementById('nbrows').value, nbcols: document.getElementById('nbcols').value })">Create Table</button></div>
-<script>
-	const vscode = acquireVsCodeApi();
-	function sendmsg(command) {
-		vscode.postMessage(command)
-	}
-</script>
-</body>
-</html>`
+const readAndSetHtmlToWebview = (webview: vscode.Webview, htmlPath: string) => {
+	fs.readFile(htmlPath, 'utf8', (err, data) => {
+		if (err) throw err
+		webview.html = data
+	})
 }
+
 
 let latestEditor: vscode.TextEditor | undefined = vscode.window.activeTextEditor
 
@@ -243,7 +230,8 @@ export function activate(context: vscode.ExtensionContext) {
 			{ enableScripts: true }
 		)
 
-		panel.webview.html = getWebviewContent()
+		const htmlPath = path.join(context.extensionPath, 'media', 'views', 'panel.html')
+		readAndSetHtmlToWebview(panel.webview, htmlPath)
 
 		panel.webview.onDidReceiveMessage(
 			message => {
