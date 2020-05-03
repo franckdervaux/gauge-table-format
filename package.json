@@ -6,6 +6,7 @@
 	"publisher": "Franck Dervaux",
 	"icon": "icon.png",
 	"repository": {
+		"type": "git",
 		"url": "https://github.com/franckdervaux/gauge-table-format.git"
 	},
 	"engines": {

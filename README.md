@@ -1,5 +1,7 @@
 # nicegaugetables README
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 This extension is helping to create and maintain tables.
 A table is defined by columns separated by the | character. It can have separator lines where the content of each column is a series of - characters.
 
