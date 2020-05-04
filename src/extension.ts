@@ -48,10 +48,21 @@ const createTable = (nbcols: number, nblines: number, editor: vscode.TextEditor 
 	}
 }
 
-const readAndSetHtmlToWebview = (webview: vscode.Webview, htmlPath: string) => {
+const readAndSetHtmlToWebview = (webview: vscode.Webview, extensionPath: string) => {
+	const htmlPath = path.join(extensionPath, 'media', 'panel.html')
+	const iconsPath = path.join(extensionPath, 'media')
+
+	const tablePngSrc = webview.asWebviewUri(vscode.Uri.file(
+		path.join(extensionPath, 'media', 'table.png')
+	))
+
+	const addTablePngSrc = webview.asWebviewUri(vscode.Uri.file(
+		path.join(extensionPath, 'media', 'addtable.png')
+	))
+
 	fs.readFile(htmlPath, 'utf8', (err, data) => {
 		if (err) throw err
-		webview.html = data
+		webview.html = eval('`' + data + '`')
 	})
 }
 
@@ -231,11 +242,13 @@ export function activate(context: vscode.ExtensionContext) {
 			'tablePanel', // Identifies the type of the webview. Used internally
 			'Manage Tables', // Title of the panel displayed to the user
 			vscode.ViewColumn.Beside, // Editor column to show the new webview panel in.
-			{ enableScripts: true }
+			{
+				enableScripts: true,
+				localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'media'))]
+			}
 		)
 
-		const htmlPath = path.join(context.extensionPath, 'media', 'views', 'panel.html')
-		readAndSetHtmlToWebview(panel.webview, htmlPath)
+		readAndSetHtmlToWebview(panel.webview, context.extensionPath)
 
 		panel.webview.onDidReceiveMessage(
 			message => {

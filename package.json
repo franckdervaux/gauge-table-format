@@ -3,7 +3,7 @@
 	"displayName": "Nice Gauge Tables",
 	"description": "Helps creating and formatting tables in Gauge spec files",
 	"version": "0.0.1",
-	"publisher": "Franck Dervaux",
+	"publisher": "franckdervaux",
 	"icon": "icon.png",
 	"repository": {
 		"type": "git",
