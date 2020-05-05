@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Tables</title>
-    <meta http-equiv="Content-Security-Policy"
-        content="img-src ${webview.cspSource};" />
+    <meta http-equiv="Content-Security-Policy" content="img-src ${webview.cspSource};" />
 </head>
 <style>
     html {
@@ -37,7 +36,7 @@
 
         display: grid;
         grid-template-rows: auto auto auto 1fr;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         row-gap: 8px;
         column-gap: 8px;
     }
@@ -56,29 +55,51 @@
         text-decoration: none;
 
         border: 0px;
+        position: relative;
     }
 
     .button:hover {
         color: #CCC;
         background-color: #666;
     }
+
+    /* Tooltip text */
+    .button .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: #444;
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+
+        /* Position the tooltip text - see examples below! */
+        position: absolute;
+        z-index: 1;
+        top: 100%;
+    }
+
+    /* Show the tooltip text when you mouse over the tooltip container */
+    .button:hover .tooltiptext {
+        visibility: visible;
+    }
 </style>
 
 <body>
     <div class="container">
         <div class="button-area">
-            <button class="button" onClick="formatTable()"><img src="${iconsPath}/table.png"></button>
+            <button class="button" onClick="formatTable()"><img src="${iconsPath}/table.png"><span class="tooltiptext">Format Table</span></button>
         </div>
         <div class="button-area">
             <label for="nbcols">Nb Columns:</label><input type="number" id="nbcols" min="1" max="20" />
             <label for="nbrows">Nb Rows:</label><input type="number" id="nbrows" min="1" max="100" />
-            <button class="button" onClick="createTable()"><img src="${iconsPath}/addtable.png"></button>
+            <button class="button" onClick="createTable()"><img src="${iconsPath}/addtable.png"><span class="tooltiptext">Add Table</span></button>
         </div>
         <div class="button-area">
-            <button class="button" onClick="deleteTable()">Delete Table</button>
+            <button class="button" onClick="deleteTable()"><img src="${iconsPath}/deletetable.png"><span class="tooltiptext">Delete Table</span></button>
         </div>
         <div class="button-area">
-            <button class="button" onClick="deleteColumn()">Delete Column</button>
+            <button class="button" onClick="deleteColumn()"><img src="${iconsPath}/deletecolumn.png"><span class="tooltiptext">Delete Column</span></button>
         </div>
     </div>
     <script>
