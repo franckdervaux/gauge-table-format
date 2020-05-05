@@ -50,14 +50,9 @@ const createTable = (nbcols: number, nblines: number, editor: vscode.TextEditor 
 
 const readAndSetHtmlToWebview = (webview: vscode.Webview, extensionPath: string) => {
 	const htmlPath = path.join(extensionPath, 'media', 'panel.html')
-	const iconsPath = path.join(extensionPath, 'media')
 
-	const tablePngSrc = webview.asWebviewUri(vscode.Uri.file(
-		path.join(extensionPath, 'media', 'table.png')
-	))
-
-	const addTablePngSrc = webview.asWebviewUri(vscode.Uri.file(
-		path.join(extensionPath, 'media', 'addtable.png')
+	const iconsPath = webview.asWebviewUri(vscode.Uri.file(
+		path.join(extensionPath, 'media')
 	))
 
 	fs.readFile(htmlPath, 'utf8', (err, data) => {
