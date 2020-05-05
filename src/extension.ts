@@ -6,7 +6,10 @@ import * as path from 'path'
 
 const PIPE = '|'
 const SPACE = ' '
+const DASH = '-'
 const TABLELINE = new RegExp(/^(\|.*?)+\|(\ )*$/gm)
+
+let latestEditor: vscode.TextEditor | undefined = vscode.window.activeTextEditor
 
 const detectTable = (document: vscode.TextDocument, from: vscode.Position): { firstline: number, lastline: number } => {
 	// does nothing if the current line is not a table line
@@ -60,8 +63,6 @@ const readAndSetHtmlToWebview = (webview: vscode.Webview, extensionPath: string)
 		webview.html = eval('`' + data + '`')
 	})
 }
-
-let latestEditor: vscode.TextEditor | undefined = vscode.window.activeTextEditor
 
 const formatTable = (editor: vscode.TextEditor | undefined) => {
 	if (editor) {
@@ -185,6 +186,50 @@ const deleteColumn = (editor: vscode.TextEditor | undefined) => {
 		})
 	}
 }
+
+const appendColumn = (editor: vscode.TextEditor | undefined) => {
+	if (editor) {
+		let document = editor.document
+		let selection = editor.selection
+
+		let { firstline, lastline } = detectTable(document, selection.start)
+		if (firstline < 0) return // no table found
+
+		let lines: Array<String> = []
+		for (let i = firstline; i <= lastline; i++) {
+			lines.push(document.lineAt(i).text)
+		}
+		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
+
+		// calculate column of the cursor
+		let columnindex = document.lineAt(selection.start.line).text.substring(0, selection.start.character).match(/\|/g)?.length
+		if (columnindex === undefined) return
+
+		// add the column in each line
+		let result = ''
+		let cursorindex = 0
+		for (let line of lines) {
+			let segments = line.split(PIPE)
+			segments.shift()
+			let separator = segments.every(seg => seg === segments[0][0].repeat(seg.length))
+			let padding = separator ? DASH : SPACE
+			segments.splice(columnindex, 0, padding.repeat(5))
+			result += PIPE + segments.join(PIPE) + '\n'
+			cursorindex = (PIPE + segments.slice(0, columnindex).join(PIPE)).length + 2
+		}
+		// remove trailing /n
+		result = result.substr(0, result.length - 1)
+		editor.edit(editBuilder => {
+			editBuilder.replace(tablerange, result)
+		})
+
+		// position cursor at the beginning of the new column
+		let newPosition = new vscode.Position(selection.start.line, cursorindex)
+        let newSelection = new vscode.Selection(newPosition, newPosition)
+        editor.selection = newSelection
+	}
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -242,9 +287,10 @@ export function activate(context: vscode.ExtensionContext) {
 				localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'media'))]
 			}
 		)
+		panel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'panelicon.png'))
 
 		readAndSetHtmlToWebview(panel.webview, context.extensionPath)
-
+	
 		panel.webview.onDidReceiveMessage(
 			message => {
 				switch (message.command) {
@@ -261,6 +307,9 @@ export function activate(context: vscode.ExtensionContext) {
 						return
 					case 'deletecolumn':
 						deleteColumn(latestEditor)
+						return
+					case 'appendcolumn':
+						appendColumn(latestEditor)
 						return
 				}
 			},

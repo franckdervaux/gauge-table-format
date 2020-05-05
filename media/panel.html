@@ -36,7 +36,7 @@
 
         display: grid;
         grid-template-rows: auto auto auto 1fr;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-template-columns: 1fr;
         row-gap: 8px;
         column-gap: 8px;
     }
@@ -87,6 +87,7 @@
             <button class="button" onClick="formatTable()"><img src="${iconsPath}/table.png"><span class="tooltiptext">Format Table</span></button>
             <button class="button" onClick="deleteTable()"><img src="${iconsPath}/deletetable.png"><span class="tooltiptext">Delete Table</span></button>
             <button class="button" onClick="deleteColumn()"><img src="${iconsPath}/deletecolumn.png"><span class="tooltiptext">Delete Column</span></button>
+            <button class="button" onClick="appendColumn()"><img src="${iconsPath}/appendcolumn.png"><span class="tooltiptext">Append Column</span></button>
         </div>
         <div class="button-area" style="grid-row: 2;">
             <button class="button" onClick="createTable()"><img src="${iconsPath}/addtable.png"><span class="tooltiptext">Add Table</span></button>
@@ -111,6 +112,10 @@
 
         function deleteColumn() {
             vscode.postMessage({ command: 'deletecolumn' })
+        }
+
+        function appendColumn() {
+            vscode.postMessage({ command: 'appendcolumn' })
         }
     </script>
 </body>
