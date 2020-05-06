@@ -276,6 +276,11 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 	context.subscriptions.push(deletecolumncommand)
 
+	let appendcolumncommand = vscode.commands.registerCommand('nicegaugetables.appendColumn', () => {
+		appendColumn(vscode.window.activeTextEditor)
+	})
+	context.subscriptions.push(appendcolumncommand)
+
 	let viewpanelcommand = vscode.commands.registerCommand('nicegaugetables.viewPanel', () => {
 		// Create and show a new webview
 		const panel = vscode.window.createWebviewPanel(

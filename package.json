@@ -19,7 +19,9 @@
 		"onCommand:nicegaugetables.formatTable",
 		"onCommand:nicegaugetables.createTable",
 		"onCommand:nicegaugetables.deleteTable",
-		"onCommand:nicegaugetables.viewPanel"
+		"onCommand:nicegaugetables.viewPanel",
+		"onCommand:nicegaugetables.viewPanel",
+		"onCommand:nicegaugetables.appendColumn"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -47,6 +49,16 @@
 			{
 				"command": "nicegaugetables.viewPanel",
 				"title": "View Table Panel",
+				"category": "Gauge Tables"
+			},
+			{
+				"command": "nicegaugetables.deleteColumn",
+				"title": "Delete Table Column",
+				"category": "Gauge Tables"
+			},
+			{
+				"command": "nicegaugetables.appendColumn",
+				"title": "Append Table Column",
 				"category": "Gauge Tables"
 			}
 		]
