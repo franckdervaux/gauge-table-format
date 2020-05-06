@@ -73,70 +73,82 @@ const formatTable = (editor: vscode.TextEditor | undefined) => {
 		let { firstline, lastline } = detectTable(document, selection.start)
 		if (firstline < 0) return // notable found
 
-		let lines: Array<String> = []
-		for (let i = firstline; i <= lastline; i++) {
-			lines.push(document.lineAt(i).text)
+		let { segments, counts } = prepareFormatTable(editor, firstline, lastline)
+		let result = ''
+		for (let seg of segments) {
+			result += PIPE + seg.join(PIPE) + PIPE + '\n'
 		}
 		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
-		let counts: Array<number> = []
-		// First calculate the maximum size of each column
-		for (let line of lines) {
+		editor.edit(editBuilder => {
+			editBuilder.replace(tablerange, result.substr(0, result.length - 1))
+		})
+	}
+}
+
+const prepareFormatTable = (editor: vscode.TextEditor, firstline: number, lastline: number): { segments: Array<Array<string>>, counts: Array<number> } => {
+	let document = editor.document
+
+	let lines: Array<String> = []
+	for (let i = firstline; i <= lastline; i++) {
+		lines.push(document.lineAt(i).text)
+	}
+	let counts: Array<number> = []
+	// First calculate the maximum size of each column
+	for (let line of lines) {
+		// Add leading | if necessary
+		if (line[0] !== PIPE) line = PIPE + line
+		// Add trailing | if necessary, starting by trimming trailing spaces
+		line = line.trim()
+		if (line[line.length - 1] != PIPE) line = line + PIPE
+		let segments = line.split(PIPE)
+		segments.shift() // As the first character is a |, the first segment is always empty
+		segments.pop() // As the last character is a |, the first segment is always empty
+		let separator = segments.every(seg => seg === segments[0][0].repeat(seg.length))
+		if (segments && !separator) {
+			for (let i = 0; i < segments.length; i++) {
+				if (i < counts.length) {
+					counts[i] = Math.max(counts[i], segments[i].trim().length)
+				} else {
+					counts.push(segments[i].trim().length)
+				}
+			}
+		}
+	}
+	// Then, padd each column of each line to the maximum size
+	let result: Array<Array<string>> = []
+	for (let line of lines) {
+		let segments: Array<string>
+		if ((line.match(/\|/g) || []).length > 1) { // ignore lines that don't have at least two | characters
 			// Add leading | if necessary
 			if (line[0] !== PIPE) line = PIPE + line
 			// Add trailing | if necessary, starting by trimming trailing spaces
 			line = line.trim()
 			if (line[line.length - 1] != PIPE) line = line + PIPE
-			let segments = line.split(PIPE)
-			segments.shift() // As the first character is a |, the first segment is always empty
-			segments.pop() // As the last character is a |, the first segment is always empty
-			let separator = segments.every(seg => seg === segments[0][0].repeat(seg.length))
-			if (segments && !separator) {
+			segments = line.split(PIPE)
+			segments.shift()
+			segments.pop()
+			let padding = SPACE
+			if (segments.every(seg => seg === segments[0][0].repeat(seg.length))) {
+				padding = segments[0][0]
 				for (let i = 0; i < segments.length; i++) {
-					if (i < counts.length) {
-						counts[i] = Math.max(counts[i], segments[i].trim().length)
-					} else {
-						counts.push(segments[i].trim().length)
-					}
+					segments[i] = padding.repeat(counts[i] + 2)
+				}
+			} else {
+				for (let i = 0; i < segments.length; i++) {
+					segments[i] = padding + segments[i].trim() + padding.repeat(counts[i] - segments[i].trim().length) + padding
 				}
 			}
-		}
-		// Then, padd each column of each line to the maximum size
-		let result = ''
-		for (let line of lines) {
-			if ((line.match(/\|/g) || []).length > 1) { // ignore lines that don't have at least two | characters
-				// Add leading | if necessary
-				if (line[0] !== PIPE) line = PIPE + line
-				// Add trailing | if necessary, starting by trimming trailing spaces
-				line = line.trim()
-				if (line[line.length - 1] != PIPE) line = line + PIPE
-				let segments = line.split(PIPE)
-				segments.shift()
-				segments.pop()
-				let padding = SPACE
-				if (segments.every(seg => seg === segments[0][0].repeat(seg.length))) {
-					padding = segments[0][0]
-					for (let i = 0; i < segments.length; i++) {
-						segments[i] = padding.repeat(counts[i] + 2)
-					}
-				} else {
-					for (let i = 0; i < segments.length; i++) {
-						segments[i] = padding + segments[i].trim() + padding.repeat(counts[i] - segments[i].trim().length) + padding
-					}
+			if (segments.length < counts.length) {
+				// complete incomplete lines
+				for (let j = segments.length; j < counts.length; j++) {
+					segments.push(padding.repeat(counts[j] + 2)) // +2 to account for added spaces
 				}
-				if (segments.length < counts.length) {
-					// complete incomplete lines
-					for (let j = segments.length; j < counts.length; j++) {
-						segments.push(padding.repeat(counts[j] + 2)) // +2 to account for added spaces
-					}
-				}
-				line = PIPE + segments.join(PIPE) + PIPE
 			}
-			result = result + line + '\n'
+			result.push(segments)
 		}
-		editor.edit(editBuilder => {
-			editBuilder.replace(tablerange, result.substr(0, result.length - 1))
-		})
 	}
+
+	return { segments: result, counts }
 }
 
 const deleteTable = (editor: vscode.TextEditor | undefined) => {
@@ -161,11 +173,8 @@ const deleteColumn = (editor: vscode.TextEditor | undefined) => {
 		let { firstline, lastline } = detectTable(document, selection.start)
 		if (firstline < 0) return // no table found
 
-		let lines: Array<String> = []
-		for (let i = firstline; i <= lastline; i++) {
-			lines.push(document.lineAt(i).text)
-		}
-		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
+		// To properly delete a column, the table must be properly formatted first
+		let { segments } = prepareFormatTable(editor, firstline, lastline)
 
 		// calculate column of the cursor
 		let columnindex = document.lineAt(selection.start.line).text.substring(0, selection.start.character).match(/\|/g)?.length
@@ -174,11 +183,10 @@ const deleteColumn = (editor: vscode.TextEditor | undefined) => {
 
 		// remove the column in each line
 		let result = ''
-		for (let line of lines) {
-			let segments = line.split(PIPE)
-			segments.shift()
-			result += PIPE + segments.filter((seg, segindex) => segindex != columnindex).join(PIPE) + '\n'
+		for (let seg of segments) {
+			result += PIPE + seg.filter((unused, segindex) => segindex != columnindex).join(PIPE) + PIPE + '\n'
 		}
+		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
 		// remove trailing /n
 		result = result.substr(0, result.length - 1)
 		editor.edit(editBuilder => {
@@ -195,6 +203,9 @@ const appendColumn = (editor: vscode.TextEditor | undefined) => {
 		let { firstline, lastline } = detectTable(document, selection.start)
 		if (firstline < 0) return // no table found
 
+		// To properly delete a column, the table must be properly formatted first
+		let { segments } = prepareFormatTable(editor, firstline, lastline)
+
 		let lines: Array<String> = []
 		for (let i = firstline; i <= lastline; i++) {
 			lines.push(document.lineAt(i).text)
@@ -208,14 +219,12 @@ const appendColumn = (editor: vscode.TextEditor | undefined) => {
 		// add the column in each line
 		let result = ''
 		let cursorindex = 0
-		for (let line of lines) {
-			let segments = line.split(PIPE)
-			segments.shift()
-			let separator = segments.every(seg => seg === segments[0][0].repeat(seg.length))
+		for (let seg of segments) {
+			let separator = seg.every(curr => curr === seg[0][0].repeat(curr.length))
 			let padding = separator ? DASH : SPACE
-			segments.splice(columnindex, 0, padding.repeat(5))
-			result += PIPE + segments.join(PIPE) + '\n'
-			cursorindex = (PIPE + segments.slice(0, columnindex).join(PIPE)).length + 2
+			seg.splice(columnindex, 0, padding.repeat(5))
+			result += PIPE + seg.join(PIPE) + PIPE + '\n'
+			cursorindex = (PIPE + seg.slice(0, columnindex).join(PIPE)).length + 2
 		}
 		// remove trailing /n
 		result = result.substr(0, result.length - 1)
@@ -225,8 +234,8 @@ const appendColumn = (editor: vscode.TextEditor | undefined) => {
 
 		// position cursor at the beginning of the new column
 		let newPosition = new vscode.Position(selection.start.line, cursorindex)
-        let newSelection = new vscode.Selection(newPosition, newPosition)
-        editor.selection = newSelection
+		let newSelection = new vscode.Selection(newPosition, newPosition)
+		editor.selection = newSelection
 	}
 }
 
@@ -295,7 +304,7 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'panelicon.png'))
 
 		readAndSetHtmlToWebview(panel.webview, context.extensionPath)
-	
+
 		panel.webview.onDidReceiveMessage(
 			message => {
 				switch (message.command) {
