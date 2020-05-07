@@ -2,7 +2,7 @@
 	"name": "nicegaugetables",
 	"displayName": "Nice Gauge Tables",
 	"description": "Helps creating and formatting tables in Gauge spec files",
-	"version": "0.8.2",
+	"version": "0.8.3",
 	"publisher": "franckdervaux",
 	"icon": "icon.png",
 	"repository": {
