@@ -7,6 +7,12 @@ A table is defined by columns separated by the | character. It can have separato
 
 ## Features
 
+Command: `View Table Panel`
+
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/viewpanel.gif?raw=true)
+
+Displays the panel offering icon buttons to perform table commands.
+
 Command: `Format Gauge Table`
 
 Properly format the table surrounding the cursor position. It makes all columns of the same width on all lines and add missing columns.
@@ -35,9 +41,7 @@ Command: `Append Gauge Column`
 
 Adds a new empty column to the right of the one containing the cursor.
 
-Command: `View Table Panel`
-
-Displays the panel offering icon buttons to perform table commands.
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/appendcolumn.gif?raw=true)
 
 ## Future Features
 
