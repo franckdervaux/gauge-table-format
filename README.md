@@ -11,25 +11,25 @@ Command: `Format Gauge Table`
 
 Properly format the table surrounding the cursor position. It makes all columns of the same width on all lines and add missing columns.
 
-![Demo](formattable.gif)
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/formattable.gif?raw=true)
 
 Command: `Create Gauge Table`
 
 Creates a table by asking for the number of rows and columns. It automatically creates a header row followed by a separator row.
 
-![Demo](createtable.gif)
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/createtable.gif?raw=true)
 
 Command: `Delete Gauge Table`
 
 Deletes the table surrounding the cursor position. 
 
-![Demo](deletetable.gif)
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/deletetable.gif?raw=true)
 
 Command: `Delete Gauge Column`
 
 Deletes the column containing the cursor. 
 
-![Demo](deletecolumn.gif)
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/deletecolumn.gif?raw=true)
 
 Command: `Append Gauge Column`
 
