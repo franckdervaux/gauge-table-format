@@ -244,6 +244,45 @@ const appendColumn = (editor: vscode.TextEditor | undefined) => {
 	}
 }
 
+const appendRow = (editor: vscode.TextEditor | undefined) => {
+	if (editor) {
+		let document = editor.document
+		let selection = editor.selection
+
+		let { firstline, lastline } = detectTable(document, selection.start)
+		if (firstline < 0) return // no table found
+
+		// To properly delete a column, the table must be properly formatted first
+		let { segments, counts } = prepareFormatTable(editor, firstline, lastline)
+
+		let lines: Array<String> = []
+		for (let i = firstline; i <= lastline; i++) {
+			lines.push(document.lineAt(i).text)
+		}
+		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
+
+		// calculate row of the cursor
+		let cursorindex = selection.start.line - firstline
+		// create empty row to be inserted
+		let addition = counts.map(count => SPACE.repeat(count + 2))
+		segments.splice(cursorindex + 1, 0, addition)
+		let result = ''
+		for (let seg of segments) {
+			result += PIPE + seg.join(PIPE) + PIPE + '\n'
+		}
+		// remove trailing /n
+		result = result.substr(0, result.length - 1)
+		editor.edit(editBuilder => {
+			editBuilder.replace(tablerange, result)
+		})
+
+		// position cursor at the beginning of the new column
+		let newPosition = new vscode.Position(selection.start.line + 1, 1)
+		let newSelection = new vscode.Selection(newPosition, newPosition)
+		editor.selection = newSelection
+	}
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -295,6 +334,11 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 	context.subscriptions.push(appendcolumncommand)
 
+	let appendrowcommand = vscode.commands.registerCommand('nicegaugetables.appendRow', () => {
+		appendRow(vscode.window.activeTextEditor)
+	})
+	context.subscriptions.push(appendrowcommand)
+
 	let viewpanelcommand = vscode.commands.registerCommand('nicegaugetables.viewPanel', () => {
 		// Create and show a new webview
 		const panel = vscode.window.createWebviewPanel(
@@ -329,6 +373,9 @@ export function activate(context: vscode.ExtensionContext) {
 						return
 					case 'appendcolumn':
 						appendColumn(latestEditor)
+						return
+					case 'appendrow':
+						appendRow(latestEditor)
 						return
 				}
 			},

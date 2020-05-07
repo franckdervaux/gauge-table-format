@@ -76,6 +76,7 @@
             <button class="button" onClick="deleteTable()"><img src="${iconsPath}/deletetable.png"><span class="tooltiptext">Delete Table</span></button>
             <button class="button" onClick="deleteColumn()"><img src="${iconsPath}/deletecolumn.png"><span class="tooltiptext">Delete Column</span></button>
             <button class="button" onClick="appendColumn()"><img src="${iconsPath}/appendcolumn.png"><span class="tooltiptext">Append Column</span></button>
+            <button class="button" onClick="appendRow()"><img src="${iconsPath}/appendrow.png"><span class="tooltiptext">Append Row</span></button>
             <button class="button" onClick="createTable()"><img src="${iconsPath}/addtable.png"><span class="tooltiptext">Add Table</span></button>
         </div>
         <div class="button-area" style="grid-row: 2;">
@@ -105,7 +106,11 @@
         function appendColumn() {
             vscode.postMessage({ command: 'appendcolumn' })
         }
-    </script>
+
+        function appendRow() {
+            vscode.postMessage({ command: 'appendrow' })
+        }
+</script>
 </body>
 
 </html>

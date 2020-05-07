@@ -43,9 +43,11 @@ Adds a new empty column to the right of the one containing the cursor.
 
 ![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/appendcolumn.gif?raw=true)
 
-## Future Features
+Command: `Append Gauge Row`
 
-* Adding rows to an existing table
+Adds a new empty row below the one containing the cursor.
+
+![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/appendrow.gif?raw=true)
 
 ## Release Notes
 
