@@ -103,13 +103,17 @@ const prepareFormatTable = (editor: vscode.TextEditor, firstline: number, lastli
 		let segments = line.split(PIPE)
 		segments.shift() // As the first character is a |, the first segment is always empty
 		segments.pop() // As the last character is a |, the first segment is always empty
-		let separator = segments.every(seg => seg === segments[0][0].repeat(seg.length))
-		if (segments && !separator) {
-			for (let i = 0; i < segments.length; i++) {
-				if (i < counts.length) {
-					counts[i] = Math.max(counts[i], segments[i].trim().length)
-				} else {
-					counts.push(segments[i].trim().length)
+		// find the first non-empty segment
+		let firstseg = segments.find(seg => seg.trim().length > 0)
+		if (firstseg) {
+			let separator = segments.every(seg => seg === firstseg![0].repeat(seg.length))
+			if (segments && !separator) {
+				for (let i = 0; i < segments.length; i++) {
+					if (i < counts.length) {
+						counts[i] = Math.max(counts[i], segments[i].trim().length)
+					} else {
+						counts.push(segments[i].trim().length)
+					}
 				}
 			}
 		}
@@ -128,8 +132,9 @@ const prepareFormatTable = (editor: vscode.TextEditor, firstline: number, lastli
 			segments.shift()
 			segments.pop()
 			let padding = SPACE
-			if (segments.every(seg => seg === segments[0][0].repeat(seg.length))) {
-				padding = segments[0][0]
+			let firstseg = segments.find(seg => seg.trim().length > 0)
+			if (firstseg && segments.every(seg => seg === firstseg![0].repeat(seg.length))) {
+				padding = firstseg![0]
 				for (let i = 0; i < segments.length; i++) {
 					segments[i] = padding.repeat(counts[i] + 2)
 				}
