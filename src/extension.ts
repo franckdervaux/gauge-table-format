@@ -221,7 +221,7 @@ const appendColumn = (editor: vscode.TextEditor | undefined) => {
 		let cursorindex = 0
 		for (let seg of segments) {
 			let separator = seg.every(curr => curr === seg[0][0].repeat(curr.length))
-			let padding = separator ? DASH : SPACE
+			let padding = separator ? seg[0][0] : SPACE
 			seg.splice(columnindex, 0, padding.repeat(5))
 			result += PIPE + seg.join(PIPE) + PIPE + '\n'
 			cursorindex = (PIPE + seg.slice(0, columnindex).join(PIPE)).length + 2
