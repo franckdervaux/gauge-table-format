@@ -9,7 +9,7 @@ A table is defined by columns separated by the | character. It can have separato
 
 Command: `View Table Panel`
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/viewpanel.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/viewpanel.gif?raw=true)
 
 Displays the panel offering icon buttons to perform table commands.
 
@@ -17,37 +17,37 @@ Command: `Format Gauge Table`
 
 Properly format the table surrounding the cursor position. It makes all columns of the same width on all lines and add missing columns.
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/formattable.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/formattable.gif?raw=true)
 
 Command: `Create Gauge Table`
 
 Creates a table by asking for the number of rows and columns. It automatically creates a header row followed by a separator row.
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/createtable.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/createtable.gif?raw=true)
 
 Command: `Delete Gauge Table`
 
 Deletes the table surrounding the cursor position. 
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/deletetable.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/deletetable.gif?raw=true)
 
 Command: `Delete Gauge Column`
 
 Deletes the column containing the cursor. 
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/deletecolumn.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/deletecolumn.gif?raw=true)
 
 Command: `Append Gauge Column`
 
 Adds a new empty column to the right of the one containing the cursor.
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/appendcolumn.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/appendcolumn.gif?raw=true)
 
 Command: `Append Gauge Row`
 
 Adds a new empty row below the one containing the cursor.
 
-![Demo](https://github.com/franckdervaux/gauge-table-format-media/blob/master/appendrow.gif?raw=true)
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/appendrow.gif?raw=true)
 
 ## Release Notes
 
