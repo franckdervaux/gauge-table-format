@@ -2,7 +2,7 @@
 	"name": "nicegaugetables",
 	"displayName": "Nice Gauge Tables",
 	"description": "Helps creating and formatting tables in Gauge spec files",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"publisher": "franckdervaux",
 	"icon": "icon.png",
 	"repository": {
@@ -74,7 +74,12 @@
 				"nicegaugetables.headerRowsCharacter": {
 					"type": "string",
 					"default": "-",
-					"enum": ["-", "=", "_", "#"],
+					"enum": [
+						"-",
+						"=",
+						"_",
+						"#"
+					],
 					"description": "Character used for header rows."
 				},
 				"nicegaugetables.newTables.defaultNumberOfRows": {
