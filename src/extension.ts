@@ -11,6 +11,8 @@ const TABLELINE = new RegExp(/^(\|.*?)+\|(\ )*$/gm)
 
 let latestEditor: vscode.TextEditor | undefined = vscode.window.activeTextEditor
 
+let configuration: vscode.WorkspaceConfiguration
+
 const detectTable = (document: vscode.TextDocument, from: vscode.Position): { firstline: number, lastline: number } => {
 	// does nothing if the current line is not a table line
 	if (!document.lineAt(from.line).text.match(TABLELINE)) return { firstline: -1, lastline: -1 }
@@ -36,11 +38,11 @@ const createTable = (nbcols: number, nblines: number, editor: vscode.TextEditor 
 
 		let result = ''
 		// First create header line
-		result = '|     '.repeat(nbcols) + PIPE + '\n'
+		result = (PIPE + SPACE.repeat(5)).repeat(nbcols) + PIPE + '\n'
 		// Then add separator line
-		result += '|-----'.repeat(nbcols) + PIPE + '\n'
+		result += (PIPE + configuration.headerRowsCharacter.repeat(5)).repeat(nbcols) + PIPE + '\n'
 		// Then add lines
-		result += ('|     '.repeat(nbcols) + PIPE + '\n').repeat(nblines)
+		result += ((PIPE + SPACE.repeat(5)).repeat(nbcols) + PIPE + '\n').repeat(nblines)
 		result += '\n'
 		if (editor) {
 			editor.edit(editBuilder => {
@@ -286,6 +288,8 @@ const appendRow = (editor: vscode.TextEditor | undefined) => {
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+
+	configuration = vscode.workspace.getConfiguration('nicegaugetables')
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand

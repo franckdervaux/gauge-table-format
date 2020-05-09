@@ -80,9 +80,9 @@
             <button class="button" onClick="createTable()"><img src="${iconsPath}/addtable.png"><span class="tooltiptext">Add Table</span></button>
         </div>
         <div class="button-area" style="grid-row: 2;">
-            <input type="number" id="nbcols" min="1" max="20" />
+            <input type="number" id="nbcols" min="1" max="20" value="${configuration.newTables.defaultNumberOfColumns}"/>
             <span>x</span>
-            <input type="number" id="nbrows" min="1" max="100" />
+            <input type="number" id="nbrows" min="1" max="100"  value="${configuration.newTables.defaultNumberOfRows}"/>
         </div>
     </div>
     <script>

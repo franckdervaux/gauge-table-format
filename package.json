@@ -67,7 +67,31 @@
 				"title": "Append Table Row",
 				"category": "Gauge Tables"
 			}
-		]
+		],
+		"configuration": {
+			"title": "Nice Gauge Tables",
+			"properties": {
+				"nicegaugetables.headerRowsCharacter": {
+					"type": "string",
+					"default": "-",
+					"enum": ["-", "=", "_", "#"],
+					"description": "Character used for header rows."
+				},
+				"nicegaugetables.newTables.defaultNumberOfRows": {
+					"type": "number",
+					"default": 4,
+					"minimum": 1,
+					"description": "The default number of rows for new tables."
+				},
+				"nicegaugetables.newTables.defaultNumberOfColumns": {
+					"type": "number",
+					"default": 3,
+					"minimum": 1,
+					"maximum": 100,
+					"description": "The default number of columns for new tables."
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
