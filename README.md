@@ -49,6 +49,12 @@ Adds a new empty row below the one containing the cursor.
 
 ![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/appendrow.gif?raw=true)
 
+Command: `Delete Empty Rows`
+
+Delete all empty rows of a table.
+
+![Demo](https://github.com/franckdervaux/gauge-table-format/blob/master/publicmedia/deleteemptyrows.gif?raw=true)
+
 ## Release Notes
 
 ### 1.0.0
