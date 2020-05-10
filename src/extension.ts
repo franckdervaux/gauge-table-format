@@ -181,7 +181,9 @@ const deleteColumn = (editor: vscode.TextEditor | undefined) => {
 		if (firstline < 0) return // no table found
 
 		// To properly delete a column, the table must be properly formatted first
-		let { segments } = prepareFormatTable(editor, firstline, lastline)
+		let { segments, counts } = prepareFormatTable(editor, firstline, lastline)
+		// Delete table if empty
+		if (segments.every(seg => seg.length === 1)) deleteTable(editor)
 
 		// calculate column of the cursor
 		let columnindex = document.lineAt(selection.start.line).text.substring(0, selection.start.character).match(/\|/g)?.length
@@ -257,10 +259,6 @@ const appendRow = (editor: vscode.TextEditor | undefined) => {
 		// To properly delete a column, the table must be properly formatted first
 		let { segments, counts } = prepareFormatTable(editor, firstline, lastline)
 
-		let lines: Array<String> = []
-		for (let i = firstline; i <= lastline; i++) {
-			lines.push(document.lineAt(i).text)
-		}
 		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
 
 		// calculate row of the cursor
@@ -282,6 +280,33 @@ const appendRow = (editor: vscode.TextEditor | undefined) => {
 		let newPosition = new vscode.Position(selection.start.line + 1, 1)
 		let newSelection = new vscode.Selection(newPosition, newPosition)
 		editor.selection = newSelection
+	}
+}
+
+const deleteEmptyRows = (editor: vscode.TextEditor | undefined) => {
+	if (editor) {
+		let document = editor.document
+		let selection = editor.selection
+
+		let { firstline, lastline } = detectTable(document, selection.start)
+		if (firstline < 0) return // no table found
+
+		// To properly delete rows, the table must be properly formatted first
+		let { segments, counts } = prepareFormatTable(editor, firstline, lastline)
+
+		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
+
+		let result = ''
+		for (let seg of segments) {
+			if (!seg.every(column => column.trim() === '')) {
+				result += PIPE + seg.join(PIPE) + PIPE + '\n'
+			}
+		}
+		// remove trailing /n
+		result = result.substr(0, result.length - 1)
+		editor.edit(editBuilder => {
+			editBuilder.replace(tablerange, result)
+		})
 	}
 }
 
@@ -343,6 +368,11 @@ export function activate(context: vscode.ExtensionContext) {
 	})
 	context.subscriptions.push(appendrowcommand)
 
+	let deleteemptyrowscommand = vscode.commands.registerCommand('nicegaugetables.deleteEmptyRows', () => {
+		deleteEmptyRows(vscode.window.activeTextEditor)
+	})
+	context.subscriptions.push(appendrowcommand)
+
 	let viewpanelcommand = vscode.commands.registerCommand('nicegaugetables.viewPanel', () => {
 		// Create and show a new webview
 		const panel = vscode.window.createWebviewPanel(
@@ -381,6 +411,9 @@ export function activate(context: vscode.ExtensionContext) {
 					case 'appendrow':
 						appendRow(latestEditor)
 						return
+					case 'deleteemptyrows':
+						deleteEmptyRows(latestEditor)
+						return
 				}
 			},
 			undefined,
@@ -389,7 +422,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	})
-	context.subscriptions.push(viewpanelcommand)
+	context.subscriptions.push(deleteemptyrowscommand)
 
 	latestEditor = vscode.window.activeTextEditor
 

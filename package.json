@@ -66,6 +66,11 @@
 				"command": "nicegaugetables.appendRow",
 				"title": "Append Table Row",
 				"category": "Gauge Tables"
+			},
+			{
+				"command": "nicegaugetables.deleteEmptyRows",
+				"title": "Delete Empty Row",
+				"category": "Gauge Tables"
 			}
 		],
 		"configuration": {
