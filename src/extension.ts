@@ -223,7 +223,7 @@ const deleteEmptyRows = (editor: vscode.TextEditor | undefined) => {
 		if (firstline < 0) return // no table found
 
 		// To properly delete rows, the table must be properly formatted first
-		let { segments, counts } = prepareFormatTable(editor, firstline, lastline)
+		let { segments } = prepareFormatTable(editor, firstline, lastline)
 
 		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
 

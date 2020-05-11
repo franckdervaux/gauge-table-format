@@ -69,4 +69,30 @@ suite('Building Result String Test Suite', () => {
 
 		assert.deepStrictEqual(result, buildResultString(segments))
 	})
+
+	test('Table with empty lines ignored', () => {
+		const segments = [
+			[ "123", "4567" ],
+			[ "---", "----" ],
+			[ "abc", "defg" ],
+			[ "   ", "    " ],
+			[ "mno", "pqrs" ],
+		]
+		const result = "|123|4567|\n|---|----|\n|abc|defg|\n|mno|pqrs|"
+
+		assert.deepStrictEqual(result, buildResultString(segments))
+	})
+
+	test('Table with empty lines NOT ignored', () => {
+		const segments = [
+			[ "123", "4567" ],
+			[ "---", "----" ],
+			[ "abc", "defg" ],
+			[ "   ", "    " ],
+			[ "mno", "pqrs" ],
+		]
+		const result = "|123|4567|\n|---|----|\n|abc|defg|\n|   |    |\n|mno|pqrs|"
+
+		assert.deepStrictEqual(result, buildResultString(segments, false))
+	})
 });
