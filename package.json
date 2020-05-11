@@ -73,6 +73,20 @@
 				"category": "Gauge Tables"
 			}
 		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "editorLangId==gauge",
+					"command": "nicegaugetables.formatTable",
+					"group": "1_modification"
+				},
+				{
+					"when": "editorLangId==gauge",
+					"command": "nicegaugetables.appendColumn",
+					"group": "1_modification"
+				}
+			]
+		},
 		"configuration": {
 			"title": "Nice Gauge Tables",
 			"properties": {
