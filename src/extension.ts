@@ -4,11 +4,9 @@ import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const PIPE = '|'
-const SPACE = ' '
-const DASH = '-'
-const TABLELINE = new RegExp(/^(\|.*?)+\|(\ )*$/gm)
+import { PIPE, SPACE, TABLELINE, formatSegments, buildResultString } from './utils'
 
+const DEFAULTCOLWIDTH = 5
 let latestEditor: vscode.TextEditor | undefined = vscode.window.activeTextEditor
 
 let configuration: vscode.WorkspaceConfiguration
@@ -36,20 +34,25 @@ const createTable = (nbcols: number, nblines: number, editor: vscode.TextEditor 
 	if (editor) {
 		let selection = editor.selection
 
-		let result = ''
+		let segments = new Array<Array<string>>(nblines  + 2)
 		// First create header line
-		result = (PIPE + SPACE.repeat(5)).repeat(nbcols) + PIPE + '\n'
+		let emptycol = SPACE.repeat(DEFAULTCOLWIDTH)
+		let emptyline= new Array<string>(nbcols)
+		emptyline.fill(emptycol, 0)
+		segments[0] = emptyline
+
 		// Then add separator line
-		result += (PIPE + configuration.headerRowsCharacter.repeat(5)).repeat(nbcols) + PIPE + '\n'
+		let sepcol = configuration.headerRowsCharacter.repeat(DEFAULTCOLWIDTH)
+		let separatorline = new Array<string>(nbcols)
+		separatorline.fill(sepcol, 0)
+		segments[1] = separatorline
+
 		// Then add lines
-		result += ((PIPE + SPACE.repeat(5)).repeat(nbcols) + PIPE + '\n').repeat(nblines)
-		result += '\n'
-		if (editor) {
-			editor.edit(editBuilder => {
-				editBuilder.insert(new vscode.Position(selection.start.line + 1, 0), result)
-			})
-			editor.selection = new vscode.Selection(new vscode.Position(selection.start.line, 2), new vscode.Position(selection.start.line, 2))
-		}
+		segments.fill(emptyline, 2)
+		editor.edit(editBuilder => {
+			editBuilder.insert(new vscode.Position(selection.start.line + 1, 0), buildResultString(segments, false))
+		})
+		editor.selection = new vscode.Selection(new vscode.Position(selection.start.line, 2), new vscode.Position(selection.start.line, 2))
 	}
 }
 
@@ -94,66 +97,7 @@ const prepareFormatTable = (editor: vscode.TextEditor, firstline: number, lastli
 	for (let i = firstline; i <= lastline; i++) {
 		lines.push(document.lineAt(i).text)
 	}
-	let counts: Array<number> = []
-	// First calculate the maximum size of each column
-	for (let line of lines) {
-		// Add leading | if necessary
-		if (line[0] !== PIPE) line = PIPE + line
-		// Add trailing | if necessary, starting by trimming trailing spaces
-		line = line.trim()
-		if (line[line.length - 1] != PIPE) line = line + PIPE
-		let segments = line.split(PIPE)
-		segments.shift() // As the first character is a |, the first segment is always empty
-		segments.pop() // As the last character is a |, the first segment is always empty
-		// find the first non-empty segment
-		let firstseg = segments.find(seg => seg.trim().length > 0)
-		if (firstseg) {
-			let separator = segments.every(seg => seg === firstseg![0].repeat(seg.length))
-			if (segments && !separator) {
-				for (let i = 0; i < segments.length; i++) {
-					if (i < counts.length) {
-						counts[i] = Math.max(counts[i], segments[i].trim().length)
-					} else {
-						counts.push(segments[i].trim().length)
-					}
-				}
-			}
-		}
-	}
-	// Then, padd each column of each line to the maximum size
-	let result: Array<Array<string>> = []
-	for (let line of lines) {
-		let segments: Array<string>
-		if ((line.match(/\|/g) || []).length > 1) { // ignore lines that don't have at least two | characters
-			// Add leading | if necessary
-			if (line[0] !== PIPE) line = PIPE + line
-			// Add trailing | if necessary, starting by trimming trailing spaces
-			line = line.trim()
-			if (line[line.length - 1] != PIPE) line = line + PIPE
-			segments = line.split(PIPE)
-			segments.shift()
-			segments.pop()
-			let padding = SPACE
-			let firstseg = segments.find(seg => seg.trim().length > 0)
-			if (firstseg && segments.every(seg => seg === firstseg![0].repeat(seg.length))) {
-				padding = firstseg![0]
-				for (let i = 0; i < segments.length; i++) {
-					segments[i] = padding.repeat(counts[i] + 2)
-				}
-			} else {
-				for (let i = 0; i < segments.length; i++) {
-					segments[i] = padding + segments[i].trim() + padding.repeat(counts[i] - segments[i].trim().length) + padding
-				}
-			}
-			if (segments.length < counts.length) {
-				// complete incomplete lines
-				for (let j = segments.length; j < counts.length; j++) {
-					segments.push(padding.repeat(counts[j] + 2)) // +2 to account for added spaces
-				}
-			}
-			result.push(segments)
-		}
-	}
+	let { result, counts } = formatSegments(lines)
 
 	return { segments: result, counts }
 }
@@ -191,15 +135,12 @@ const deleteColumn = (editor: vscode.TextEditor | undefined) => {
 		columnindex--
 
 		// remove the column in each line
-		let result = ''
 		for (let seg of segments) {
-			result += PIPE + seg.filter((unused, segindex) => segindex != columnindex).join(PIPE) + PIPE + '\n'
+			seg.splice(columnindex, 1)
 		}
 		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
-		// remove trailing /n
-		result = result.substr(0, result.length - 1)
 		editor.edit(editBuilder => {
-			editBuilder.replace(tablerange, result)
+			editBuilder.replace(tablerange, buildResultString(segments))
 		})
 	}
 }
@@ -226,19 +167,15 @@ const appendColumn = (editor: vscode.TextEditor | undefined) => {
 		if (columnindex === undefined) return
 
 		// add the column in each line
-		let result = ''
 		let cursorindex = 0
 		for (let seg of segments) {
 			let separator = seg.every(curr => curr === seg[0][0].repeat(curr.length))
 			let padding = separator ? seg[0][0] : SPACE
 			seg.splice(columnindex, 0, padding.repeat(5))
-			result += PIPE + seg.join(PIPE) + PIPE + '\n'
 			cursorindex = (PIPE + seg.slice(0, columnindex).join(PIPE)).length + 2
 		}
-		// remove trailing /n
-		result = result.substr(0, result.length - 1)
 		editor.edit(editBuilder => {
-			editBuilder.replace(tablerange, result)
+			editBuilder.replace(tablerange, buildResultString(segments))
 		})
 
 		// position cursor at the beginning of the new column
@@ -266,14 +203,8 @@ const appendRow = (editor: vscode.TextEditor | undefined) => {
 		// create empty row to be inserted
 		let addition = counts.map(count => SPACE.repeat(count + 2))
 		segments.splice(cursorindex + 1, 0, addition)
-		let result = ''
-		for (let seg of segments) {
-			result += PIPE + seg.join(PIPE) + PIPE + '\n'
-		}
-		// remove trailing /n
-		result = result.substr(0, result.length - 1)
 		editor.edit(editBuilder => {
-			editBuilder.replace(tablerange, result)
+			editBuilder.replace(tablerange, buildResultString(segments))
 		})
 
 		// position cursor at the beginning of the new column
@@ -296,16 +227,8 @@ const deleteEmptyRows = (editor: vscode.TextEditor | undefined) => {
 
 		let tablerange = new vscode.Range(new vscode.Position(firstline, 0), new vscode.Position(lastline, document.lineAt(lastline).range.end.character))
 
-		let result = ''
-		for (let seg of segments) {
-			if (!seg.every(column => column.trim() === '')) {
-				result += PIPE + seg.join(PIPE) + PIPE + '\n'
-			}
-		}
-		// remove trailing /n
-		result = result.substr(0, result.length - 1)
 		editor.edit(editBuilder => {
-			editBuilder.replace(tablerange, result)
+			editBuilder.replace(tablerange, buildResultString(segments))
 		})
 	}
 }
@@ -395,8 +318,10 @@ export function activate(context: vscode.ExtensionContext) {
 						formatTable(latestEditor)
 						return
 					case 'createtable':
-						if ((message.nbcols > 0) && (message.nbrows > 0)) {
-							createTable(message.nbcols, message.nbrows, latestEditor)
+						let nbcols = parseInt(message.nbcols,10)
+						let nbrows = parseInt(message.nbcols, 10)
+						if (( nbcols > 0) && (nbrows > 0)) {
+							createTable(nbcols, nbrows, latestEditor)
 						}
 						return
 					case 'deletetable':
@@ -430,7 +355,6 @@ export function activate(context: vscode.ExtensionContext) {
 		if (editor) latestEditor = editor
 	})
 }
-
 
 // this method is called when your extension is deactivated
 export function deactivate() { }
