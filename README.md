@@ -6,15 +6,16 @@ This extension is helping to create and maintain tables.
 A table is defined by columns separated by the | character. It can have separator lines where the content of each column is a series of - characters.
 
 For example, it transforms
-|First Name|Last Name|Town|
-|Jonathan|Guywithaverylonglastname|Seattle|
-|John|Doe|Buenos Aeres|
+
+    |First Name|Last Name|Town|  
+    |Jonathan|Guywithaverylonglastname|Seattle|  
+    |John|Doe|Buenos Aeres|
 
 into
 
-| First Name | Last Name                | Town         |
-| Jonathan   | Guywithaverylonglastname | Seattle      |
-| John       | Doe                      | Buenos Aeres |
+    | First Name | Last Name                | Town         |  
+    | Jonathan   | Guywithaverylonglastname | Seattle      |  
+    | John       | Doe                      | Buenos Aeres |
 
 
 ## Features
